@@ -24,6 +24,10 @@ or 'empty.'"""
 """First idea seems rather infesible, instead trying to create a 'board' object which stores the information
 of tiles inside a 2D array"""
 
+"""Unfortunately, I had to move back to first idea in order to be able to remove pieces once they are no
+longer needed. While storing data inside the board allows me to place pieces without issue, it doesn't
+give me the ability to remove pieces from the board to free up memory."""
+
 
 screen = graphics.GraphWin("Othello Python Game", 800, 800)
 screen.update()
@@ -41,7 +45,7 @@ class Board(graphics.Rectangle):
         self.setFill('white')
         self.setOutline('black')
         self.setWidth(5)
-        
+        self.draw(screen)
 
     def clear_board(self):
         for i in range(8):
@@ -53,16 +57,44 @@ class Board(graphics.Rectangle):
         self.tiles[3][4] = 'black'
         self.tiles[4][4] = 'white'
 
+    def draw_grid(self):
+        for i in range(8):
+            aLine = graphics.Line(graphics.Point((i+1)*80,720), graphics.Point((i+1)*80, 80))
+            aLine.setWidth(4)
+            aLine.setFill('black')
+            aLine.draw(screen)
+            
+            aLine = graphics.Line(graphics.Point(80,(i+1)*80), graphics.Point(720,(i+1)*80))
+            aLine.setWidth(4)
+            aLine.setFill('black')
+            aLine.draw(screen)
+
+
 
 gameboard = Board(graphics.Point(80,720), graphics.Point(720,80))
-gameboard.draw(screen)
+gameboard.draw_grid()
 
-for i in range(8):
-    aLine = graphics.Line(graphics.Point((i+1)*80,720), graphics.Point((i+1)*80, 80))
-    aLine.setWidth(4)
-    aLine.setFill('black')
-    aLine.draw(screen)
-    aLine = graphics.Line(graphics.Point(80,(i+1)*80), graphics.Point(720,(i+1)*80))
-    aLine.setWidth(4)
-    aLine.setFill('black')
-    aLine.draw(screen)
+#creates a 2D list of every single tile
+tiles = [[graphics.Circle(graphics.Point(80 * (i + 1) + 40, 80 * (j + 1) + 40), 25) for j in range(8)] for i in range(8)]
+
+def update_tiles():
+    for i in range(8):
+        for j in range(8):
+            if not tiles[i][j].canvas:
+                if gameboard.tiles[i][j] == 'white':
+                    tiles[i][j].setWidth(2)
+                    tiles[i][j].draw(screen)
+                if gameboard.tiles[i][j] == 'black':
+                    tiles[i][j].setWidth(2)
+                    tiles[i][j].setFill('black')
+                    tiles[i][j].draw(screen)
+            if gameboard.tiles[i][j] == 'empty':
+                tiles[i][j].undraw()
+
+update_tiles()
+
+gameboard.tiles[1][1] = 'black'
+update_tiles()
+
+gameboard.tiles[1][1] = 'empty'
+update_tiles()
