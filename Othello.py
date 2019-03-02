@@ -47,6 +47,7 @@ class Board(graphics.Rectangle):
         self.setWidth(5)
         self.draw(screen)
         self.draw_grid()
+        self.turn = 'black'
 
     def clear_board(self):
         for i in range(8):
@@ -88,19 +89,19 @@ class Board(graphics.Rectangle):
             temp_x, temp_y = x, y
             temp_x += dx
             temp_y += dy
-            if self.is_on_board(temp_x,temp_y) and gameboard.tiles[temp_x][temp_y] == 'white':
+            if self.is_on_board(temp_x,temp_y) and self.tiles[temp_x][temp_y] == 'white':
                 temp_x += dx
                 temp_y += dy
                 if not self.is_on_board(temp_x,temp_y):
                     continue
-                while gameboard.tiles[temp_x][temp_y] == 'white':
+                while self.tiles[temp_x][temp_y] == 'white':
                     temp_x += dx
                     temp_y += dy
                     if not self.is_on_board(temp_x,temp_y):
                         break
                 if not self.is_on_board(temp_x, temp_y):
                     continue
-                if gameboard.tiles[temp_x][temp_y] == 'black':
+                if self.tiles[temp_x][temp_y] == 'black':
                     while True:
                         temp_x -= dx
                         temp_y -= dy
@@ -110,12 +111,50 @@ class Board(graphics.Rectangle):
         if not to_flip:
             return
 
-        gameboard.tiles[x][y] = 'black'
+        self.tiles[x][y] = 'black'
+        self.turn = 'white'
         for x,y in to_flip:
-            gameboard.tiles[x][y] = 'black'
+            self.tiles[x][y] = 'black'
         update_tiles()
         return
-                    
+
+    def place_white(self, x, y):
+        
+        if not self.is_on_board(x,y) or gameboard.tiles[x][y] != 'empty':
+            return
+        to_flip = []
+        for dx, dy in [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]]:
+            temp_x, temp_y = x, y
+            temp_x += dx
+            temp_y += dy
+            if self.is_on_board(temp_x,temp_y) and self.tiles[temp_x][temp_y] == 'black':
+                temp_x += dx
+                temp_y += dy
+                if not self.is_on_board(temp_x,temp_y):
+                    continue
+                while self.tiles[temp_x][temp_y] == 'black':
+                    temp_x += dx
+                    temp_y += dy
+                    if not self.is_on_board(temp_x,temp_y):
+                        break
+                if not self.is_on_board(temp_x, temp_y):
+                    continue
+                if self.tiles[temp_x][temp_y] == 'white':
+                    while True:
+                        temp_x -= dx
+                        temp_y -= dy
+                        if temp_x == x and temp_y == y:
+                            break
+                        to_flip.append([temp_x, temp_y])
+        if not to_flip:
+            return
+
+        self.tiles[x][y] = 'white'
+        self.turn = 'black'
+        for x,y in to_flip:
+            self.tiles[x][y] = 'white'
+        update_tiles()
+        return                    
 
 
 
@@ -130,6 +169,7 @@ def update_tiles():
             if not tiles[i][j].canvas:
                 if gameboard.tiles[i][j] == 'white':
                     tiles[i][j].setWidth(2)
+                    tiles[i][j].setFill('white')
                     tiles[i][j].draw(screen)
                 if gameboard.tiles[i][j] == 'black':
                     tiles[i][j].setWidth(2)
@@ -137,6 +177,7 @@ def update_tiles():
                     tiles[i][j].draw(screen)
             else:
                 if gameboard.tiles[i][j] == 'white':
+                    tiles[i][j].setFill('white')
                     tiles[i][j].setWidth(2)
                 if gameboard.tiles[i][j] == 'black':
                     tiles[i][j].setWidth(2)
@@ -146,4 +187,11 @@ def update_tiles():
 
 
 gameboard.place_black(3,2)
-update_tiles()
+gameboard.place_white(2,2)
+
+while True:
+    click = screen.getMouse()
+    if gameboard.turn == 'black':
+        gameboard.place_black(int(click.x/80 - 1), int(click.y/80 - 1))
+    if gameboard.turn == 'white':
+        gameboard.place_white(int(click.x/80 - 1), int(click.y/80 - 1))
