@@ -54,6 +54,7 @@ class Board(graphics.Rectangle):
             for j in range(8):
                 self.tiles[i][j] = 'empty'
 
+
         self.tiles[3][3] = 'white'
         self.tiles[4][3] = 'black'
         self.tiles[3][4] = 'black'
@@ -154,7 +155,120 @@ class Board(graphics.Rectangle):
         for x,y in to_flip:
             self.tiles[x][y] = 'white'
         update_tiles()
-        return                    
+        return
+
+    def black_moves(self):
+        legal_moves = []
+        for x in range(8):
+            for y in range(8):
+                if gameboard.tiles[x][y] != 'empty':
+                    continue
+                to_flip = []
+                for dx, dy in [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]]:
+                    temp_x, temp_y = x, y
+                    temp_x += dx
+                    temp_y += dy
+                    if self.is_on_board(temp_x,temp_y) and self.tiles[temp_x][temp_y] == 'white':
+                        temp_x += dx
+                        temp_y += dy
+                        if not self.is_on_board(temp_x,temp_y):
+                            continue
+                        while self.tiles[temp_x][temp_y] == 'white':
+                            temp_x += dx
+                            temp_y += dy
+                            if not self.is_on_board(temp_x,temp_y):
+                                break
+                        if not self.is_on_board(temp_x, temp_y):
+                            continue
+                        if self.tiles[temp_x][temp_y] == 'black':
+                            while True:
+                                temp_x -= dx
+                                temp_y -= dy
+                                if temp_x == x and temp_y == y:
+                                    break
+                                to_flip.append([temp_x, temp_y])
+                if to_flip:
+                    legal_moves.append([x,y])
+        return legal_moves
+
+    def white_moves(self):
+        legal_moves = []
+        for x in range(8):
+            for y in range(8):
+                if gameboard.tiles[x][y] != 'empty':
+                    continue
+                to_flip = []
+                for dx, dy in [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]]:
+                    temp_x, temp_y = x, y
+                    temp_x += dx
+                    temp_y += dy
+                    if self.is_on_board(temp_x,temp_y) and self.tiles[temp_x][temp_y] == 'black':
+                        temp_x += dx
+                        temp_y += dy
+                        if not self.is_on_board(temp_x,temp_y):
+                            continue
+                        while self.tiles[temp_x][temp_y] == 'black':
+                            temp_x += dx
+                            temp_y += dy
+                            if not self.is_on_board(temp_x,temp_y):
+                                break
+                        if not self.is_on_board(temp_x, temp_y):
+                            continue
+                        if self.tiles[temp_x][temp_y] == 'white':
+                            while True:
+                                temp_x -= dx
+                                temp_y -= dy
+                                if temp_x == x and temp_y == y:
+                                    break
+                                to_flip.append([temp_x, temp_y])
+                if to_flip:
+                    legal_moves.append([x,y])
+        return legal_moves
+
+    def get_score(self):
+        black = 0
+        white = 0
+        for x in range(8):
+            for y in range(8):
+                if gameboard.tiles[x][y] == 'black':
+                    black += 1
+                if gameboard.tiles[x][y] == 'white':
+                    white += 1
+        return [black, white]
+                    
+    def game_over(self):
+        game_over_screen = graphics.Rectangle(graphics.Point(100,200), graphics.Point(700,600))
+        game_over_screen.setFill('black')
+        game_over_screen.draw(screen)
+
+        game_over_text = graphics.Text(graphics.Point(400,300), 'Game Over! (Click Twice To Rematch)')
+        game_over_text.setTextColor('white')
+        game_over_text.setSize(24)
+        game_over_text.draw(screen)
+
+        white_score = graphics.Text(graphics.Point(250,400), 'White: ' + str(gameboard.get_score()[1]))
+        white_score.setTextColor('white')
+        white_score.setSize(24)
+        white_score.draw(screen)
+
+        black_score = graphics.Text(graphics.Point(550,400), 'Black: ' + str(gameboard.get_score()[0]))
+        black_score.setTextColor('white')
+        black_score.setSize(24)
+        black_score.draw(screen)
+
+        screen.getMouse()
+        screen.getMouse()
+
+        game_over_screen.undraw()
+        game_over_text.undraw()
+        white_score.undraw()
+        black_score.undraw()
+        self.clear_board()
+        update_tiles()
+        
+
+        
+                
 
 
 
@@ -184,14 +298,27 @@ def update_tiles():
                     tiles[i][j].setFill('black')
             if gameboard.tiles[i][j] == 'empty':
                 tiles[i][j].undraw()
+update_tiles()
 
-
-gameboard.place_black(3,2)
-gameboard.place_white(2,2)
 
 while True:
     click = screen.getMouse()
     if gameboard.turn == 'black':
+        if not gameboard.black_moves():
+            gameboard.game_over()
         gameboard.place_black(int(click.x/80 - 1), int(click.y/80 - 1))
+        if not gameboard.white_moves():
+            gameboard.turn = 'black'
+            print 'another black turn'
+        
+        
     if gameboard.turn == 'white':
+        if not gameboard.white_moves():
+            gameboard.game_over()
         gameboard.place_white(int(click.x/80 - 1), int(click.y/80 - 1))
+        if not gameboard.black_moves():
+            gameboard.turn = 'white'
+            print 'another white turn'
+
+        
+
